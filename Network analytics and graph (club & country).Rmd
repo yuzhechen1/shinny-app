@@ -1,0 +1,96 @@
+---
+title: "Champions League Analysis"
+output: html_document
+---
+
+Load packages and data
+```{r}
+library(tidyverse)
+library(StatsBombR)
+library(SBpitch)
+library(ggplot2)
+library(igraph)
+library(data.table)
+
+dt.matches <- read_delim("Champions League Data 1955-2015.csv", delim = ";")
+dt.matches.15 <- dt.matches %>%
+  filter(Season == "2015/2016")
+```
+
+Plot network for clubs
+```{r}
+# Filter on latest season
+dt.matches.15 <- dt.matches %>%
+  filter(Season == "2015/2016")
+
+# Build undirected graph
+g.matches.15 <- graph_from_data_frame(dt.matches.15[, c("Team 1", "Team 2")],
+                           directed=FALSE)
+
+# Calculate values for network graph
+V(g.matches.15)$degree <- degree(g.matches.15)
+V(g.matches.15)$degree.font <- degree(g.matches.15)/30
+
+# Build network graph
+plot(g.matches.15, edge.arrow.size=.2, edge.curved=0, vertex.size = V(g.matches.15)$degree, vertex.label.cex	= V(g.matches.15)$degree.font, vertex.label.family = "sans", vertex.label.color	= "black", edge.color	= "gray10") + par(mar = c(0, 0, 0, 0))
+
+# Ideas for the formatting of the graph: https://kateto.net/netscix2016.html
+```
+
+Plot network for countries
+```{r}
+# Build undirected graph
+g.matches.15.c <- graph_from_data_frame(dt.matches.15[, c("Country Team 1", "Country Team 2")],
+                           directed=FALSE)
+
+# Calculate values for network graph
+V(g.matches.15.c)$degree <- degree(g.matches.15.c)
+V(g.matches.15.c)$degree.font <- degree(g.matches.15.c)/40
+
+# Build network graph
+plot(g.matches.15.c, edge.arrow.size=.2, edge.curved=0, vertex.size = V(g.matches.15.c)$degree, vertex.label.cex	= V(g.matches.15.c)$degree.font, vertex.label.family = "sans", vertex.label.color	= "black", edge.color	= "gray10") + par(mar = c(0, 0, 0, 0))
+```
+
+Degree distribution for clubs
+```{r}
+# Create undirected graph
+g.matches <- graph_from_data_frame(dt.matches[, c("Team 1", "Team 2")],
+                           directed=FALSE)
+
+# Calculate degree
+V(g.matches)$degree <- round(degree(g.matches), 0)
+V(g.matches)$closeness <- round(closeness(g.matches), 4)
+V(g.matches)$betweenness <- round(betweenness(g.matches), 0)
+V(g.matches)$evcent <- round(evcent(g.matches)$vector, 3)
+
+# Create data table
+g.matches.all <- induced.subgraph(g.matches, V(g.matches))
+dt.g.matches <- data.table(get.data.frame(g.matches.all, "vertices"))
+
+# Order datatable on degree
+dt.g.matches[order(-degree)]
+
+# Plot for degree distributiom
+ggplot(dt.g.matches, aes(degree)) + geom_histogram(fill = "grey", colour = "black", binwidth = 1)
+```
+
+
+Degree distribution for country
+```{r}
+# Create undirected graph
+g.matches.c <- graph_from_data_frame(dt.matches[, c("Country Team 1", "Country Team 2")],
+                           directed=FALSE)
+
+# Calculate degree
+V(g.matches.c)$degree <- round(degree(g.matches.c), 0)
+V(g.matches.c)$closeness <- round(closeness(g.matches.c), 4)
+V(g.matches.c)$betweenness <- round(betweenness(g.matches.c), 0)
+V(g.matches.c)$evcent <- round(evcent(g.matches.c)$vector, 3)
+
+# Create data table
+g.matches.all.c <- induced.subgraph(g.matches.c, V(g.matches.c))
+dt.g.matches.c <- data.table(get.data.frame(g.matches.all.c, "vertices"))
+dt.g.matches.c[order(-degree)]
+
+ggplot(dt.g.matches.c, aes(degree)) + geom_histogram(fill = "grey", colour = "black", bins = 15)
+```
