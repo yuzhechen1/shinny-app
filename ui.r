@@ -12,38 +12,83 @@ ui <- fluidPage(
                                                  choices = all_seasons$Season)
                                    ),
                                    mainPanel(
+                                     p("In this season,"),
                                      tableOutput("top_teams"),
                                    )
                                  ),# select a season to find the best performing team
-                                 sidebarLayout(
-                                   sidebarPanel(
-                                     selectInput(inputId = "round",
-                                                 label = "Choose a round",
-                                                 choices = all_rounds$Round)
-                                   ),
-                                   mainPanel(
-                                     tableOutput("most_goals"),
-                                   )
-                                 ), # select a round to find the most goals
-                        ),
-                        tabPanel(title = "Season summary",
-                                 plotOutput("summary_season"), #descriptive analysis group by season
                                  
                         ),
                         tabPanel(title = "Teams summary",
-                                 plotOutput("summary_team"), #descriptive analysis group by team
+                                 tableOutput("summary_team"), #descriptive analysis group by team
+                        ),
+                        tabPanel(title = "League summary",
+                                 # sidebarLayout(
+                                 #   sidebarPanel(
+                                 #     selectInput(
+                                 #       inputId = "league",
+                                 #       label = "Choose a country",
+                                 #       choices = all_countries$`Country Team 1`
+                                 #     )
+                                 #   ),
+                                 #   mainPanel(
+                                 #     tableOutput("league_table"),
+                                 #   ),
+                                 # ),
+                                 sidebarLayout(
+                                   sidebarPanel(
+                                     selectInput(
+                                       inputId = "country",
+                                       label = "Choose a country",
+                                       choices = all_countries$`Country Team 1`,
+                                       multiple = TRUE
+                                     )
+                                   ),
+                                   mainPanel(
+                                     tableOutput("summary_league"), #descriptive analysis group by league
+                                   ),
+                                   
+                                 ),
+                                 sidebarLayout(
+                                   sidebarPanel(
+                                     sliderInput("period","Choose a period:",
+                                       value = c(1955,1965),min = 1955,max = 2016
+                                     ),
+                                   ),
+                                   mainPanel(
+                                     plotOutput("bar_chart_by_learegue")
+                                   ),
+                                 ),
+                                 
                         ),
                         ),# Descriptive part
              navbarMenu(title = "Network Analysis",
-                        tabPanel(title = "Network Statistics",
-                                 plotOutput("Network_statistics")
+                        tabPanel(title = "Network descriptive analysis",
+                                 p("This is the top 30 teams ordered by degree:"),
+                                 tableOutput("degree_table"),
+                                 p("This is the degree histogram of all teams:"),
+                                 plotOutput("Degree_distribution"),
+                                 p("This is the degree histogram of all countries:"),
+                                 plotOutput("Degree_distribution_c")
                                  ),
                         tabPanel(title = "Projection into the Teams Space",
+                                 sidebarLayout(
+                                   sidebarPanel(
+                                     selectInput(
+                                       inputId = "Seasons",
+                                       label = "Choose seasons for projection:",
+                                       choices = all_seasons$Season,
+                                       multiple = TRUE
+                                     )
+                                   ),
+                                   mainPanel(
+                                     plotOutput("projection")
+                                   )
+                                 ),
                                  ## need to input team names/season/other statistics
                                  plotOutput("Projection")
                                  )
                         ),# Network Attributes part
-             navbarMenu(title = "Deep dive Analytics",
+             navbarMenu(title = "Deep Dive Analytics",
                         tabPanel(title = "Link prediction",
                                  ## need to input team names & minimum threshold & TBD
                                  plotOutput("predicted_link")
