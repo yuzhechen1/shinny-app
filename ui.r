@@ -12,7 +12,7 @@ ui <- fluidPage(
                                                  choices = all_seasons$Season)
                                    ),
                                    mainPanel(
-                                     p("In this season,"),
+                                     p("In this season, teams in the final round are as below:"),
                                      tableOutput("top_teams"),
                                    )
                                  ),# select a season to find the best performing team
@@ -41,7 +41,10 @@ ui <- fluidPage(
                                        label = "Choose a country",
                                        choices = all_countries$`Country Team 1`,
                                        multiple = TRUE
-                                     )
+                                     ),
+                                     sliderInput("club_number","Choose the number of clubs:",
+                                                     value = c(0,10),min = 0,max = 35
+                                                   ),
                                    ),
                                    mainPanel(
                                      tableOutput("summary_league"), #descriptive analysis group by league
@@ -50,15 +53,14 @@ ui <- fluidPage(
                                  ),
                                  sidebarLayout(
                                    sidebarPanel(
-                                     sliderInput("period","Choose a period:",
-                                       value = c(1955,1965),min = 1955,max = 2016
-                                     ),
+                                     # sliderInput("period","Choose a period:",
+                                     #   value = c(1955,1965),min = 1955,max = 2016
+                                     # ),
                                    ),
                                    mainPanel(
                                      plotOutput("bar_chart_by_learegue")
                                    ),
                                  ),
-                                 
                         ),
                         ),# Descriptive part
              navbarMenu(title = "Network Analysis",
@@ -84,8 +86,6 @@ ui <- fluidPage(
                                      plotOutput("projection")
                                    )
                                  ),
-                                 ## need to input team names/season/other statistics
-                                 plotOutput("Projection")
                                  )
                         ),# Network Attributes part
              navbarMenu(title = "Deep Dive Analytics",
