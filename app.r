@@ -1,7 +1,8 @@
-install.packages("tidyverse")
-install.packages("gapminder")
-install.packages("readxl")
-install.packages("visNetwork")
+# install.packages("tidyverse")
+# install.packages("gapminder")
+# install.packages("readxl")
+# install.packages("visNetwork")
+options(encoding = "UTF-8")
 library(shiny)
 library(readxl)
 library(igraph)
@@ -10,9 +11,9 @@ library(dplyr)
 library(gapminder)
 library(data.table)
 library(visNetwork)
-setwd("C:/Users/86156/Desktop/硕士/Network data analysis/R working directory/group assignment")
+setwd("C:/Users/86156/Desktop/master/Network data analysis/R working directory/group assignment")
 #Descriptive analysis part (Thom and Chen)
-Champions_League_Data_1955_2015 <- read_excel("C:/Users/86156/Desktop/硕士/Network data analysis/R working directory/group assignment/Source data/Champions League Data 1955-2021.xlsx")
+Champions_League_Data_1955_2015 <- read_excel("C:/Users/86156/Desktop/master/Network data analysis/R working directory/group assignment/shiny app/source data/Champions League Data 1955-2021.xlsx")
 
 all_rounds <- unique(Champions_League_Data_1955_2015[,3])
 all_seasons <- unique(Champions_League_Data_1955_2015[,2])
@@ -80,7 +81,7 @@ V(g.matches.15)$degree.font <- degree(g.matches.15)/30
 
 # Build network graph
 # Ideas for the formatting of the graph: https://kateto.net/netscix2016.html
-plot(g.matches.15, edge.arrow.size=.2, edge.curved=0, vertex.size = V(g.matches.15)$degree, vertex.label.cex	= V(g.matches.15)$degree.font, vertex.label.family = "sans", vertex.label.color	= "black", edge.color	= "gray10") + par(mar = c(0, 0, 0, 0))
+#plot(g.matches.15, edge.arrow.size=.2, edge.curved=0, vertex.size = V(g.matches.15)$degree, vertex.label.cex	= V(g.matches.15)$degree.font, vertex.label.family = "sans", vertex.label.color	= "black", edge.color	= "gray10") + par(mar = c(0, 0, 0, 0))
 
 # Create undirected graph
 g.matches <- graph_from_data_frame(Champions_League_Data_1955_2015[, c("Team 1", "Team 2")],
@@ -120,4 +121,6 @@ ggplot(dt.g.matches.c, aes(degree)) + geom_histogram(fill = "grey", colour = "bl
 
 shinyApp(ui = ui, server = server)
 
-
+library(rsconnect)
+rsconnect::setAccountInfo(name='yuzhechen', token='F3F30738E87AD55B38C1CD7AFCFD1D3C', secret='0JSZ9ll+lPQcp5v7rmTCI5/y0VLMet/WfcZaGqsC')
+deployApp("C:/Users/86156/Desktop/master/Network data analysis/R working directory/group assignment/shiny app",account = "yuzhechen")
