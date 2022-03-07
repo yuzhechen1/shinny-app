@@ -12,7 +12,7 @@ server <- function(input, output) {
   )
   
   output$summary_league <- renderTable(
-    league_statistics[which(league_statistics$country %in% input$country),]
+    league_statistics[which(league_statistics$country %in% input$country & league_statistics$`number of clubs` > input$club_number[1] & league_statistics$`number of clubs` < input$club_number[2])  ,]
   )#statistics group by country
   
   output$bar_chart_by_learegue <- renderPlot(
@@ -34,13 +34,19 @@ server <- function(input, output) {
     Champions_League_Data_1955_2015 %>%
       filter(Champions_League_Data_1955_2015$Season %in% input$Seasons)
   })
-  
+  projection_graph <- reactive({
+    graph_from_data_frame(projection_data()[, c("Team 1", "Team 2")],
+                                          directed=FALSE)
+  })
   output$projection <- renderPlot(
-    plot(graph_from_data_frame(projection_data[, c("Team 1", "Team 2")],
-                               directed=FALSE), edge.arrow.size=.2, edge.curved=0, vertex.size = V(graph_from_data_frame(projection_data[, c("Team 1", "Team 2")],
-                                                                                                                         directed=FALSE))$degree, vertex.label.cex	= V(graph_from_data_frame(projection_data[, c("Team 1", "Team 2")],
-                                                                                                                                                                                             directed=FALSE))$degree.font, vertex.label.family = "sans", vertex.label.color	= "black", edge.color	= "gray10") + par(mar = c(0, 0, 0, 0))
-
+    plot(projection_graph(),main = "Projection network of selected seasons")
   )
+  
+    #plot(graph_from_data_frame(projection_data[, c("Team 1", "Team 2")],directed=FALSE)
+         #),
+         # , edge.arrow.size=.2, edge.curved=0, vertex.size = V(graph_from_data_frame(projection_data[, c("Team 1", "Team 2")],
+         #  directed=FALSE))$degree, vertex.label.cex	= V(graph_from_data_frame(projection_data[, c("Team 1", "Team 2")]
+        #directed=FALSE))$degree.font, vertex.label.family = "sans", vertex.label.color	= "black", edge.color	= "gray10") + par(mar = c(0, 0, 0, 0))
+  
     
 }
