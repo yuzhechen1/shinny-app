@@ -1,0 +1,37 @@
+library(shinythemes)
+library(shiny)
+library(bslib)
+
+
+
+ui <- fluidPage( 
+  theme = bs_theme(version = 5, bootswatch = "morph"),
+  navbarPage("CCL",
+    tabPanel("Welcome",
+             h1(strong("Welcome to Champions of the Champions League (CCL)"), style = "font-size:50px;"),
+             p("If you have wanted to know everything about the Champions League this application is perfect for you!
+             Here, you are able to discover not only which European football clubs and countries have perforemed the best, 
+             but also explore everything about the matches played and even predictions on who might play eachother in the furture, 
+             all over the entire 65+ years of champions league history. Now go out there and explore the past and potentional future of 
+             the Champions League!"), style = "font-size: 20px;"),
+           
+    navbarMenu("Descriptive Analytics",
+          tabPanel("Clubs Summary"),     
+          tabPanel("Countries Summary"),
+          tabPanel("Top Clubs")), 
+    navbarMenu("Network Analytics",
+          tabPanel("Clubs - Network Descriptive Analytics"),
+          tabPanel("Countries - Network Descriptive Analytics"), 
+          tabPanel("Projection into the club space"),
+          tabPanel("Projection into the country space")),
+    navbarMenu("Deep Dive Analytics",
+          tabPanel("Link prediction: Who wins next?"),
+          tabPanel("Inference"))
+   )
+)
+  
+
+server <- function(input, output) {
+}
+
+shinyApp(ui = ui, server = server)
