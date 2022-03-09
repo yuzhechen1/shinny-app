@@ -2,6 +2,7 @@
 # install.packages("gapminder")
 # install.packages("readxl")
 # install.packages("visNetwork")
+install.packages("shinythemes")
 options(encoding = "UTF-8")
 library(shiny)
 library(readxl)
@@ -11,6 +12,11 @@ library(dplyr)
 library(gapminder)
 library(data.table)
 library(visNetwork)
+library(data.table)
+library(DT)
+library(bslib)
+library(shinythemes)
+library(stargazer)
 setwd("C:/Users/86156/Desktop/master/Network data analysis/R working directory/group assignment")
 #Descriptive analysis part (Thom and Chen)
 Champions_League_Data_1955_2015 <- read_excel("C:/Users/86156/Desktop/master/Network data analysis/R working directory/group assignment/shiny app/source data/Champions League Data 1955-2021.xlsx")
@@ -22,6 +28,8 @@ all_teams <- unique(Champions_League_Data_1955_2015[,4])
 
 team_round <- Champions_League_Data_1955_2015[,c("Team 1","Round","Season")]
 names(team_round)[1] <- "Top teams"#subset of team,round and season, to select top teams in each season
+country_final <- Champions_League_Data_1955_2015[,c("Country Team 1","Round","Season")]
+names(country_final)[1] <- "Winning Country"#subset of country, round and season, to select winning country in each season
 
 number_club_by_league <- Champions_League_Data_1955_2015 %>% distinct(`Team 1`,.keep_all = TRUE)
 number_club_by_league <- aggregate(number_club_by_league$`Team 1`,by=list(type=number_club_by_league$`Country Team 1`),length)
@@ -97,7 +105,7 @@ g.matches.all <- induced.subgraph(g.matches, V(g.matches))
 dt.g.matches <- data.table(get.data.frame(g.matches.all, "vertices"))
 
 # Order datatable on degree
-degree_table <- head(dt.g.matches[order(-degree)],30)
+degree_table <- dt.g.matches[order(-degree)]
 
 # Plot for degree distributiom
 ggplot(dt.g.matches, aes(degree)) + geom_histogram(fill = "grey", colour = "black", binwidth = 1)
@@ -115,12 +123,35 @@ V(g.matches.c)$evcent <- round(evcent(g.matches.c)$vector, 3)
 # Create data table
 g.matches.all.c <- induced.subgraph(g.matches.c, V(g.matches.c))
 dt.g.matches.c <- data.table(get.data.frame(g.matches.all.c, "vertices"))
-dt.g.matches.c[order(-degree)]
+degree_table.c <- dt.g.matches.c[order(-degree)]
 
 ggplot(dt.g.matches.c, aes(degree)) + geom_histogram(fill = "grey", colour = "black", bins = 15)
 
+
+
+#Inference analysis part (Chen)
+average_score <- as.data.frame(tapply(Champions_League_Data_1955_2015$`Goals Team 1`,Champions_League_Data_1955_2015$`Country Team 1`,mean))  
+names(average_score)[1] <- "Average_score"
+#dependent variable: average score
+
+dt.g.matches.c<- dt.g.matches.c[order(dt.g.matches.c$name),]
+#independent variable: degree
+
+names(number_game_by_league)[1] <- "Country"
+#independent variable: number of games
+
+rg_table <- cbind(number_game_by_league,dt.g.matches.c,average_score$Average_score)
+rg_table <- rg_table[,-3]
+names(rg_table)[7] <- "average_score"
+
+lm1 <- lm(
+  formula = average_score~`number of games`,
+  data = rg_table)
+stargazer(lm1,type="text") 
+rg_table %>% 
+  ggplot(aes(x=evcent,y=average_score))+
+  geom_point(alpha = 0.25)+geom_smooth(method ="lm",
+                                       se = FALSE)
+
 shinyApp(ui = ui, server = server)
 
-library(rsconnect)
-rsconnect::setAccountInfo(name='yuzhechen', token='F3F30738E87AD55B38C1CD7AFCFD1D3C', secret='0JSZ9ll+lPQcp5v7rmTCI5/y0VLMet/WfcZaGqsC')
-deployApp("C:/Users/86156/Desktop/master/Network data analysis/R working directory/group assignment/shiny app",account = "yuzhechen")
