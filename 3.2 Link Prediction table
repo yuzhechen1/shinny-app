@@ -1,3 +1,4 @@
+# ------------------------------------------------------------------------------
 ### LINK PREDICTION TABLE ###
 # ------------------------------------------------------------------------------
 # Load in data
@@ -17,14 +18,15 @@ input1 <- "AFC Ajax"
 input2 <- pull(dplyr::filter(list.clubs, `Team 1` != input1 ), `Team 1`)
 
 # Loop formula which pastes all the outcomes underneath each other
-output_total <- c()
+score <- c()
 for(i in 1:length(input2)){
   output <- round(similarity(g.matches, v=c(input1, input2[i]))[1,2], 2)
-  output_total <- c(output_total, output)
+  score <- c(score, output)
 }
 
 # Combine outcomes with names
-outputtable <- cbind(input2, data.table(output_total))
+outputtable <- cbind(input2, data.table(score)) %>%
+  select(Club = input2, Score = score)
 
 # Rank table show top 20
-head(data.table(outputtable[order(-output_total),]),20)
+head(data.table(outputtable[order(-score),]),20)
