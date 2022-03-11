@@ -1,0 +1,115 @@
+library(shinythemes)
+library(shiny)
+library(bslib)
+
+
+
+ui <- fluidPage( 
+  theme = bs_theme(version = 4, bootswatch = "cerulean"),
+  navbarPage("CCL",
+             tabPanel("Welcome",
+                      h1(strong("Welcome to Champions of the Champions League (CCL)"), style = "font-size:50px;"),
+                      p("If you have wanted to know everything about the Champions League this application is perfect for you!
+             Here, you are able to discover not only which European football teams and countries have perforemed the best, 
+             but also explore everything about the matches played and even predictions on who might play eachother in the furture, 
+             all over the entire 65+ years of champions league history."), style = "font-size: 20px;",
+                      p("Now go out there and explore the past and potentional future of 
+             the Champions League!")),
+             
+             navbarMenu("Descriptive Analytics", 
+                        tabPanel("Clubs Summary",
+                                 h1("Clubs summary"),
+                                 p("Here you’ll find the entire dataset that includes all the matches 
+                                   played in the history of the Champions League. Each row in the dataset 
+                                   represents a unique match. For each of these matches, the round within the 
+                                   champions league, the clubs that faced each other during the match, the countries 
+                                   both clubs are from, and the goals scored by both clubs are specified. If you wish 
+                                   to search for a specific match you’ll be able to use the search filter placed above 
+                                   the table."), style = "font-size: 20px;",
+                                 p("Furthermore, below the table, you will be able to search for the best performing clubs
+                                   and countries from a particular season. You can do this by selecting a season that you 
+                                   are interested in in the search bar located on the left side of the page. The clubs and 
+                                   countries that will be displayed are on ones that won and that made it to the semi-final of the tournament. ")),    
+                        tabPanel("Countries Summary",
+                                 h1("Countries summary"),
+                                 p("In the country summary section, you will be able to analyse the performance of the countries 
+                                   that you are interested in. The table you see below will display different interesting 
+                                   information about the countries that you select. For each country, the total number of 
+                                   unique teams that have at least played in the Champions League ones is displayed. 
+                                   Furthermore, the total number of games played by teams from the country and the number 
+                                   of participants are shown as well. Finally, you will be able to see the average number 
+                                   of participants from these countries and the number of trophies won by them."), style = "font-size: 20px;",
+                                 p("Below the table, a histogram will be displayed showing the number of trophies won by the 
+                                   different countries. On the left side of the histogram, you will be able to change a slider
+                                   based on the years you wish to include in the histogram. This will result in the histogram 
+                                   only showing the winners from that specific period.   ")), 
+                        tabPanel("Clubs summary",
+                                 h1("Clubs summary"),
+                                 p("TEST"), style = "font-size: 20px;",
+                                 p("Test"))), 
+             navbarMenu("Network Analytics",
+                        tabPanel("Teams - Network Descriptive Analytics",
+                                 h1("Teams - Network Descriptive Analytics"),
+                                 p("Welcome to the network descriptive analytics of the teams. On this page, you will be able to find
+                                   all kinds of information on the network of all the different clubs that have participated in the 
+                                   Champions League. Firstly, on the left side of your screen, you can find some summary information
+                                   on the number of nodes, number of edges, the average path length, the average clustering coefficient,
+                                   the diameter, and the average degree of the network. "), style = "font-size: 20px;",
+                                 p("To complement this information, a table is added that displays the different teams and their specific
+                                   degree, closeness, betweenness, and ecvent. Below this table, the degree distribution of the network is 
+                                   displayed in the form of a bar chart. To Filter the presented information, you will be able to select the 
+                                   season(s) and teams that you are interested in. Finally, to search for specific teams, you can use the 
+                                   search bar located above the data table. ")), 
+                        tabPanel("Countries - Network Descriptive Analytics",
+                                 h1("Countries - Network Descriptive Analytics"),
+                                 p("Welcome to the network descriptive analytics of the countries. On this page, you will be able to find 
+                                   all kinds of information on the network of all the different countries that have participated in the 
+                                   Champions League. Firstly, on the left side of your screen, you can find some summary information on the 
+                                   number of nodes, number of edges, the average path length, the average clustering coefficient, the diameter,
+                                   and the average degree of the network. "), style = "font-size: 20px;",
+                                 p("To complement this information, a table is added that displays the different countries and their specific
+                                   degree, closeness, betweenness, and ecvent. Below this table, the degree distribution of the network is displayed 
+                                   in the form of a bar chart. To Filter the presented information, you will be able to select the season(s) and 
+                                   countries that you are interested in. Finally, to search for specific countries, you can use the search bar located 
+                                   above the data table. ")),
+                        tabPanel("Projection into the team space",
+                                 h1("Projection into the club space"),
+                                 p("By creating a projection into the network of Champions League clubs, users can easily see what opponents their
+                                   favourite club has been playing with and how centrally located their club is in the network. More centrally located 
+                                   clubs play more matches, and can thus be seen as more successful in the champions league. Furthermore, the bigger 
+                                   the clubs are displayed in the network, the more games they played."), style = "font-size: 20px;",
+                                 p("By using some of the filters, users can select 
+                                   specific seasons, [FILTER 2] or [FILTER 3]. The projection was created using [METHOD 1].")),
+                        tabPanel("Projection into the country space",
+                                 h1("Projection into the country space"),
+                                 p("Over the many years that the Champion’s League has been taking place, many countries have had different clubs playing
+                                   matches. By creating a projection into the country space, fans can identify how their home country or country of choice
+                                   has been competing against other countries, regardless of the soccer club they support. Furthermore, the more central and
+                                   bigger the country is displayed in the network, the more games they have played."), style = "font-size: 20px;",
+                                 p(" By using some of the filters, users can select specific seasons, [FILTER 2] or [FILTER 3]. The projection was created
+                                   using [METHOD 1]."))),
+             navbarMenu("Deep Dive Analytics",
+                        tabPanel("Link prediction: Who faces who?",
+                                 h1("Link prediction: Who wins next?"),
+                                 p("The link prediction shown below can give you a better understanding of the possibilities that two
+                                   clubs play each other in the future. You can do this by selecting a club you want to analyse on the 
+                                   left side of your screen under “Choose a club that you want to predict”. To illustrate how it works
+                                   we select AC Milan as an example. Subsequently, to be able to analyse who is more likely to play each 
+                                   other, select two different clubs under “Choose another club”."), style = "font-size: 20px;",
+                                 p("In our example, we choose Sporting CP and Real Madrid CF. The output that is shown is a Jaccard index
+                                   of your selected teams. The output shows a ratio of all the clubs played by club 1, that club 2 also 
+                                   played against.  In our case, the Jaccard index between Ac Milan and Sporting CP is 0.1494253 and from 
+                                   AC Milan and Real Madrid CF is 0.3488372. This shows that AC Milan and Real Madrid CF play against similar 
+                                   clubs and thus the match between AC Milan and Real Madrid CF is more likely to happen. ")),
+                        tabPanel("Inference",
+                                 h1("Inference"),
+                                 p("Test"), style = "font-size: 20px;",
+                                 p("test"))),
+  )
+)
+
+
+server <- function(input, output) {
+}
+
+shinyApp(ui = ui, server = server)
