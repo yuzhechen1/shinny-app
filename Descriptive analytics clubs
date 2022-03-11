@@ -1,0 +1,146 @@
+# Load in packages and data
+library(tidyverse)
+library(ggplot2)
+library(igraph)
+library(data.table)
+setwd("~/Studie/Network Data Analytics/Assignments/Group Assignment")
+dt.matches <- read_delim("Champions League Data 1955-2021.csv", delim = ";")
+dt.matches$winner <- ifelse(dt.matches$`Goals Team 1` > dt.matches$`Goal Team 2`, dt.matches$`Team 1`,
+                            ifelse(dt.matches$`Goals Team 1` < dt.matches$`Goal Team 2`, dt.matches$`Team 2`, ""))
+dt.matches$loser <- ifelse(dt.matches$`Goals Team 1` < dt.matches$`Goal Team 2`, dt.matches$`Team 1`,
+                           ifelse(dt.matches$`Goals Team 1` > dt.matches$`Goal Team 2`, dt.matches$`Team 2`, ""))
+
+# Lists
+# ------------------------------------------------------------------------------
+# Create unique list of clubs and country and rename it
+l.club.country <- unique(dt.matches[, c("Team 1", "Country Team 1")]) %>%
+  select('Club' = `Team 1`, 'Country' = `Country Team 1`)
+
+# Create unique list of clubs and country and rename it
+l.club.season <- unique(dt.matches[, c("Team 1", "Season")]) %>%
+  select('Club' = `Team 1`, 'Season' = `Season`)
+
+# Create lists of clubs that won the final
+l.club.final <- unique(dt.matches[, c("Team 1", "Season", "Round")]) %>%
+  filter(Round == "Final") %>%
+  select('Club' = `Team 1`, 'Season' = `Season`)
+
+# Create list of goals scored per club
+l.goals.scored.home <- dt.matches[, c('Team 1', 'Goals Team 1')] %>%
+  select(Club = 'Team 1', goals.scored = 'Goals Team 1')
+l.goals.scored.away <- dt.matches[, c(Club = 'Team 2', goals ='Goal Team 2')] %>%
+  select(Club = 'Team 2', goals.scored = 'Goal Team 2')
+l.goals.scored <- rbind(l.goals.scored.home, l.goals.scored.away)
+
+# Create list of goals scored per club
+l.goals.against.home <- dt.matches[, c('Team 1', 'Goal Team 2')] %>%
+  select(Club = 'Team 1', goals.against = 'Goal Team 2')
+l.goals.against.away <- dt.matches[, c(Club = 'Team 2', goals ='Goals Team 1')] %>%
+  select(Club = 'Team 2', goals.against = 'Goals Team 1')
+l.goals.against <- rbind(l.goals.against.home, l.goals.against.away)
+
+# Data frames
+# ------------------------------------------------------------------------------
+# Count wins per club
+df.win.club <- dt.matches %>%
+  group_by(Club = dt.matches$winner) %>%
+  summarize(wins = n()) %>%
+  arrange(desc(wins))
+
+# Count losses per club
+df.lose.club <- dt.matches %>%
+  group_by(Club = dt.matches$loser) %>%
+  summarize(losses = n()) %>%
+  arrange(desc(losses))
+
+# Count seasons per club
+df.seasons.club <- l.club.season %>%
+  group_by(Club) %>%
+  summarize(seasons = n())
+
+# Count trophies per club
+df.trophies.club <- l.club.final %>%
+  group_by(Club) %>%
+  summarize(trophies = n()) %>%
+  arrange(desc(trophies))
+
+# Goals scored per club
+df.goals.scored <- l.goals.scored %>%
+  group_by(Club) %>%
+  summarize(goals.scored = sum(goals.scored)) %>%
+  arrange(desc(goals.scored))
+
+# Goals against per club
+df.goals.against <- l.goals.against %>%
+  group_by(Club) %>%
+  summarize(goals.against = sum(goals.against)) %>%
+  arrange(desc(goals.against))
+
+# Make datatables of dataframes (needed for left join to work)
+dt.seasons.club <- data.table(df.seasons.club)
+dt.trophies.club <- data.table(df.trophies.club)
+dt.wins.club <- data.table(df.win.club)
+dt.losses.club <- data.table(df.lose.club)
+dt.goals.scored <- data.table(df.goals.scored)
+dt.goals.against <- data.table(df.goals.against)
+
+# ------------------------------------------------------------------------------
+### CLUBS DESCRIPTIVE ANALYTICS ###
+# ------------------------------------------------------------------------------
+# Filtering variables
+select.year <- 1955
+
+# Apply filters on
+dt.matches.filtered.1.1 <- dt.matches %>%
+  filter(year >= select.year)
+
+# Create undirected graph
+g.matches.filtered.1.1 <- graph_from_data_frame(dt.matches.filtered.1.1[, c("Team 1", "Team 2")],
+                                            directed=FALSE)
+
+# Calculate matches played
+V(g.matches.filtered.1.1)$matches <- round(degree(g.matches.filtered.1.1), 0)
+
+# Create data table and add countries
+dt.g.matches.filtered.1.1 <- data.table(get.data.frame(g.matches.filtered.1.1, "vertices")) %>%
+  mutate(Club = name) %>%
+  left_join(l.club.country, by = c("Club" = "Club"))
+
+# Select correct columns
+club.statistics <- dt.g.matches.filtered.1.1[, c('Club', 'Country', 'matches')][order(-matches)]
+
+# Add countries per club
+club.statistics <- club.statistics %>% 
+  left_join(dt.seasons.club, by = c("Club" = "Club"))
+
+# Add trophies per club
+club.statistics <- club.statistics %>% 
+  left_join(dt.trophies.club, by = c("Club" = "Club"))
+
+# Add wins per club
+club.statistics <- club.statistics %>% 
+  left_join(dt.wins.club, by = c("Club" = "Club"))
+
+# Add losses per club
+club.statistics <- club.statistics %>% 
+  left_join(dt.losses.club, by = c("Club" = "Club"))
+
+# Add goals scored per club
+club.statistics <- club.statistics %>% 
+  left_join(dt.goals.scored, by = c("Club" = "Club"))
+
+# Add goals against per club
+club.statistics <- club.statistics %>% 
+  left_join(dt.goals.against, by = c("Club" = "Club"))
+
+# Calculate draws
+club.statistics$draws <- club.statistics$matches - club.statistics$wins - club.statistics$
+
+# Select correct columns
+club.statistics <- club.statistics[, c('Club', 'Country', 'seasons', 'matches', 'trophies', 'wins', 'draws', 'losses', 'goals.scored', 'goals.against')]
+
+# Get rid of NA
+club.statistics <- club.statistics %>%
+  mutate_all(~replace(., is.na(.), 0))
+
+club.statistics
