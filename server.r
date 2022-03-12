@@ -171,7 +171,7 @@ server <- function(input, output) {
                                           directed=FALSE)
   })
   output$projection <- renderPlot(
-    plot(projection_graph(),main = "Team projection network of selected seasons")
+    plot(projection_graph(), vertex.label.family = "sans", vertex.label.color	= "black", main = "Team projection network of selected seasons")
   )
   projection_data.c <- reactive({
     Champions_League_Data_1955_2015 %>%
