@@ -82,6 +82,11 @@ dt.matches.15 <- Champions_League_Data_1955_2015 %>%
   filter(Season == "2015/2016")
 g.matches.15 <- graph_from_data_frame(dt.matches.15[, c("Team 1", "Team 2")],
                                       directed=FALSE)
+
+# Create unique list of teams and country and rename it
+dt.club.country <- unique(dt.matches[, c("Team 1", "Country Team 1")]) %>%
+  select('Club' = `Team 1`, 'Country' = `Country Team 1`)
+
 # Calculate values for network graph
 V(g.matches.15)$degree <- degree(g.matches.15)
 
@@ -105,7 +110,9 @@ g.matches.all <- induced.subgraph(g.matches, V(g.matches))
 dt.g.matches <- data.table(get.data.frame(g.matches.all, "vertices"))
 
 # Order datatable on degree
-degree_table <- dt.g.matches[order(-degree)]
+degree_table <- dt.g.matches[order(-degree)] %>%
+  mutate(Club = name) %>%
+  left_join(dt.club.country, by = c("Club" = "Club"))
 
 # Plot for degree distributiom
 ggplot(dt.g.matches, aes(degree)) + geom_histogram(fill = "grey", colour = "black", binwidth = 1)
