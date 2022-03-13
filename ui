@@ -1,0 +1,315 @@
+ui <- fluidPage(
+  theme = bs_theme(version = 5, bootswatch = "cerulean"),
+  h1("Champions League Network Data Analytics"),
+  p(style = "font-family:Impact",
+    "Dashboard for Champions League from 1955 to 2015"),
+    navbarPage(title = "CCL",
+               tabPanel("Welcome",
+                        h1(strong("Welcome to Champions of the Champions League (CCL)"), style = "font-size:50px;"),
+                        p("If you have wanted to know everything about the Champions League this application is perfect for you!
+             At CCL, you are able to discover not only which European football clubs and countries have perforemed the best, 
+             but also explore everything about the matches played and even predictions on who might play eachother in the furture, 
+             all over the entire 65+ years of champions league history. "), style = "font-size: 20px;",
+                        p("Now go out there and explore the past and potentional future of 
+             the Champions League!"),
+                        h2("About the development of the app"),
+                        p("This application is developed in relation to an assignment for the course Network Data Analytics, 
+                          at Erasmus University Rotterdam. The team is composed of four students in the MSc Program Business
+                          Information Management: Yuzhe Chen, Bram van de Water, Thom Hudepohl and Kwint Jansen. By using the
+                          R platform and multiple of the tools provided in R, such as Shiny, the team was able to build out a
+                          fully functioning application. The team has a proven track record in the data science and tech field,
+                          across APAC and EMEA. Due to the team’s diversity the app will be valuable for multiple target audiences, 
+                          such as football fans and individuals who have no relationship to the Champion’s League yet.",
+                          p("The app was developed by using a dataset that contains data containing 4.890 matches of 61 seasons 
+                            of the Champions League. For each row, the date, the round, both the teams that played each other, 
+                            the goals scored from both teams and the final result are specified.",
+                            p("Each champions league season progresses in a similar manner. Before 1994, the teams first played
+                              each other in round 1, the team that won progressed to the round of 16, then the quarter-finals, 
+                              semi-finals, and finally, the last row of the tournament is the final. After 1994 round one got 
+                              replaced by the group stage. In total, the dataset contains information about 350 unique clubs 
+                              and represents 44 leagues.")))),
+                  
+               navbarMenu(title = "Descriptive Analytics",
+                        tabPanel("Data retrievals",
+                                 p("Here you’ll find the entire dataset that includes all the matches played in the history of the 
+                                 Champions League. Each row in the dataset represents a unique match. For each of these matches, the 
+                                 round within the champions league, the clubs that faced each other during the match, the countries 
+                                 both clubs are from, and the goals scored by both clubs are specified. If you wish to search for a
+                                 specific match you’ll be able to use the search filter placed above the table."), style = "font-size: 20px;",
+                                 p("Furthermore, below the table, you will be able to search for the best performing clubs and countries
+                                   from a particular season. You can do this by selecting a season that you are interested in in the 
+                                   search bar located on the left side of the page. The clubs and countries that will be displayed are 
+                                   on ones that made it to the semi-final of the tournament."),
+                           
+                                dataTableOutput("raw_data"),
+                                 sidebarLayout(
+                                   sidebarPanel(
+                                     selectInput(inputId = "season",
+                                                 label = "Choose a season",
+                                                 choices = all_seasons$Season)
+                                   ),
+                                
+                                   mainPanel(
+                                     wellPanel(
+                                     p("In this season, clubs in the final round and winners are as below:"),
+                                     tableOutput("top_teams"),
+                                     br(),
+                                     tableOutput("Winner"),
+                                     )
+                                    
+                                   
+                                  )
+                                 ),# select a season to find the best performing team
+                                 
+                        ),
+                        tabPanel(title = "Clubs summary",
+                                 p("In the clubs summary section, you will be able to analyse the performance of the clubs that you are
+                                   interested in. The table you see below will display different interesting information about the clubs
+                                   that you select. For each club, "), style = "font-size: 20px;",
+                                 p("TEST"),
+                        
+                                 tableOutput("summary_team"), #descriptive analysis group by team
+                        ),
+                        tabPanel(title = "Country summary",
+                                 p("In the country summary section, you will be able to analyse the performance of the countries that you
+                                   are interested in. The table you see below will display different interesting information about the 
+                                   countries that you select. For each country, the total number of unique clubs that have at least played 
+                                   in the Champions League ones is displayed. Furthermore, the total number of games played by clubs from 
+                                   the country and the number of participants are shown as well. Finally, you will be able to see the average 
+                                   number of participants from these countries and the number of trophies won by them."), style = "font-size: 20px;",
+                                 p("Below the table, a histogram will be displayed showing the number of trophies won by the different countries.
+                                   On the left side of the histogram, you will be able to change a slider based on the years you wish to include
+                                   in the histogram. This will result in the histogram only showing the winners from that specific period."),
+                                 
+                                 # sidebarLayout(
+                                 #   sidebarPanel(
+                                 #     selectInput(
+                                 #       inputId = "league",
+                                 #       label = "Choose a country",
+                                 #       choices = all_countries$`Country Team 1`
+                                 #     )
+                                 #   ),
+                                 #   mainPanel(
+                                 #     tableOutput("league_table"),
+                                 #   ),
+                                 # ),
+                                 sidebarLayout(
+                                   sidebarPanel(
+                                     selectInput(
+                                       inputId = "country",
+                                       label = "Choose a country",
+                                       choices = all_countries$`Country Team 1`,
+                                       selected = c(all_countries$`Country Team 1`[1:10]),
+                                       multiple = TRUE
+                                     ),
+                                     sliderInput("club_number","Choose the number of clubs from this country:",
+                                                     value = c(0,20),min = 0,max = 35
+                                                   ),
+                                   ),
+                                   mainPanel(
+                                     wellPanel(
+                                     tableOutput("summary_league"), #descriptive analysis group by league
+                                     )
+                                    ),
+                                   
+                                 ),
+                                 p("How many trophies does each country win in all seasons?"),
+                                 sidebarLayout(
+                                   sidebarPanel(
+                                     checkboxGroupInput("opts","Which period are you interested in?"
+                                                        ,choices = c("all years","last ten years"))
+                                     # radioButtons("opts","Which period are you interested in?"
+                                     #              ,choices = c("all years","last ten years")),
+                                   ),
+                                   mainPanel(
+                                    wellPanel(
+                                      p("Bar chart with number of trophies of each country"),
+                                       plotOutput("bar_chart_by_league"),
+                                        )
+                                      ),
+                                   ),
+                        ),
+                        ), 
+  # ---------------------------------------------------------------------------------------------------------------------------
+  # Descriptive part
+  # ---------------------------------------------------------------------------------------------------------------------------
+             navbarMenu(title = "Network Analysis",
+                        tabPanel(title = "Club data network",
+                                 p("Welcome to the network descriptive analytics of the clubs. On this page, you will be able to find all 
+                                   kinds of information on the network of all the different clubs that have participated in the Champions 
+                                   League. Firstly, on the left side of your screen, you can find some summary information on the number 
+                                   of nodes, number of edges, the average path length, the average clustering coefficient, the diameter, 
+                                   and the average degree of the network. "), style = "font-size: 20px;",
+                                 p("To complement this information, a table is added that displays the different clubs and their specific 
+                                   degree, closeness, betweenness, and ecvent. Below this table, the degree distribution of the network is 
+                                   displayed in the form of a bar chart. To Filter the presented information, you will be able to select 
+                                   the season(s) and clubs that you are interested in. Finally, to search for specific clubs, you can use 
+                                   the search bar located above the data table."),
+                                
+                                 
+                                  dataTableOutput("degree_table"),
+                                br(),
+                                br(),
+                                p("Degree histogram of all the clubs:"),
+                                  plotOutput("Degree_distribution"),
+                                 
+                                 
+                                 ),
+                        tabPanel(title = "Country data network",
+                                 p("Welcome to the network descriptive analytics of the countries. On this page, you will be able to find 
+                                   all kinds of information on the network of all the different countries that have participated in the 
+                                   Champions League. Firstly, on the left side of your screen, you can find some summary information on 
+                                   the number of nodes, number of edges, the average path length, the average clustering coefficient, the 
+                                   diameter, and the average degree of the network. "), style = "font-size: 20px;",
+                                 p("To complement this information, a table is added that displays the different countries and their
+                                   specific degree, closeness, betweenness, and ecvent. Below this table, the degree distribution of the 
+                                   network is displayed in the form of a bar chart. To Filter the presented information, you will be able 
+                                   to select the season(s) and countries that you are interested in. Finally, to search for specific 
+                                   countries, you can use the search bar located above the data table."),
+                                 
+                                 dataTableOutput("degree_table.c"),
+                                 br(),
+                                 br(),
+                                 p("Degree histogram of all the countries:"),
+                                 plotOutput("Degree_distribution_c")
+                                 ),
+                        
+                        
+                        tabPanel(title = "Projection into the clubs Space",
+                                 p("By creating a projection into the clubs space, users can easily see what opponents
+                                   their favourite club has been playing against and how centrally located their club is in the network. More 
+                                   centrally located clubs play more matches, and can thus be seen as more successful in the champions league.
+                                   Furthermore, the bigger the clubs are displayed in the network, the more games they played. "), style = "font-size: 20px;",
+                                 p("On the left side of your screen you can choose a single season or multiple seasons that you are interested 
+                                   in. Furthermore, you are able to select the minimum games played by these clubs."),
+                                 
+                                 sidebarLayout(
+                                   sidebarPanel(
+                                     selectInput(
+                                       inputId = "Seasons",
+                                       label = "Choose seasons for projection:",
+                                       choices = all_seasons$Season,
+                                       multiple = TRUE
+                                     ),
+                                     sliderInput("min_games","Choose the minimum games played:",
+                                                 value = c(10),min = 0,max = 35
+                                     ),
+                                   ),
+                                   mainPanel(
+                                    wellPanel( 
+                                     plotOutput("projection")
+                                     )
+                                   )
+                                 ),
+                                 ),
+                        
+                        
+                        tabPanel(title = "Projection into the Countries Space",
+                                 p("By creating a projection into country space , users can easily see what countries
+                                   their favourite country has been playing against and how centrally located their country is in the network. More 
+                                   centrally located countries play more matches, and can thus be seen as more successful in the champions league.
+                                   Furthermore, the bigger the countries are displayed in the network, the more games they played. "), style = "font-size: 20px;",
+                                 p("On the left side of your screen you can choose a single season or multiple seasons that you are interested 
+                                   in. Furthermore, you are able to select the minimum games played by these countries."),
+                                 sidebarLayout(
+                                   sidebarPanel(
+                                     selectInput(
+                                       inputId = "Seasons.c",
+                                       label = "Choose seasons for projection:",
+                                       choices = all_seasons$Season,
+                                       multiple = TRUE
+                                     ),
+                                     sliderInput("min_games.c","Choose the minimum games played:",
+                                                 value = c(50),min = 0,max = 200
+                                     ),
+                                   ),
+                                   mainPanel(
+                                     wellPanel(
+                                     plotOutput("projection.c")
+                                   )
+                                  ) 
+                                 ),
+                        ),
+                        ),# Network Attributes part
+  
+  #--------------------------------------------------------------------------------------------------------------------------
+  # Deep Dive Part
+  # --------------------------------------------------------------------------------------------------------------------------
+  
+             navbarMenu(title = "Deep Dive Analytics",
+                        tabPanel(title = "Link prediction",
+                                 p("The link prediction shown below can give you a better understanding of the possibilities
+                                   that two clubs play each other in the future. You can do this by selecting a club you want
+                                   to analyse on the left side of your screen under “Choose a club that you want to predict”.
+                                   To illustrate how it works we select AC Milan as an example. Subsequently, to be able to 
+                                   analyse who is more likely to play each other, select two different clubs under “Choose 
+                                   another club”."), style = "font-size: 20px;",
+                                 p("In our example, we choose Sporting CP and Real Madrid CF. The output that is shown is a 
+                                   Jaccard index of your selected clubs. The output shows a ratio of all the clubs played by 
+                                   club 1, that club 2 also played against.  In our case, the Jaccard index between Ac Milan 
+                                   and Sporting CP is 0.1494253 and from AC Milan and Real Madrid CF is 0.3488372. This shows 
+                                   that AC Milan and Real Madrid CF play against similar clubs and thus the match between AC 
+                                   Milan and Real Madrid CF is more likely to happen."),
+                                 ## need to input team names & minimum threshold & TBD
+                                 sidebarLayout(
+                                   sidebarPanel(
+                                     selectInput(
+                                       inputId = "club1",
+                                       label = "Choose a club that you want to predict:",
+                                       choices = all_teams$`Team 1`,
+                                     ),
+                                     selectInput(
+                                       inputId = "club2",
+                                       label = "Choose another club:",
+                                       choices = all_teams$`Team 1`,
+                                     )
+                                   ),
+                                   mainPanel(
+                                     wellPanel(
+                                     p("The Jaccard Index of these two clubs are:"),
+                                     textOutput("similarity.1")
+                                   )
+                                   )
+                                 ),
+                                 sidebarLayout(
+                                   sidebarPanel(
+                                     selectInput(
+                                       inputId = "club3",
+                                       label = "Choose a club that you want to predict:",
+                                       choices = all_teams$`Team 1`,
+                                     ),
+                                     selectInput(
+                                       inputId = "club4",
+                                       label = "Choose another club:",
+                                       choices = all_teams$`Team 1`,
+                                     )
+                                   ),
+                                   mainPanel(
+                                     wellPanel(
+                                     p("The Jaccard Index of these two clubs are:"),
+                                     textOutput("similarity.2")
+                                   )
+                                  ) 
+                                 ),
+                                 textOutput("name_club1"),
+                                 ),
+                        
+                        
+                        
+                        tabPanel(title = "Inference",
+                                 p("The following graph shows the linear correlation of average score and degree centrality of countries"),
+                                 plotOutput("Regression_results"),
+                                 p("Statistical significance of this model:"),
+                                 tableOutput("significance"),
+                                 p("The following graph shows the linear correlation of average score and number of games played of countries"),
+                                 plotOutput("Regression_results.1"),
+                                 p("Statistical significance of this model:"),
+                                 tableOutput("significance.1")
+                                 ## need to input variable names(such as centrality and average goals)
+                                 
+                          
+                        )
+                        ),
+             ),
+             
+    )
