@@ -1,4 +1,4 @@
-server <- function(input, output) {
+server <- function(input, output,session) {
   
   output$raw_data <- renderTable(
     Champions_League_Data_1955_2015
@@ -44,16 +44,19 @@ server <- function(input, output) {
       };
       "
       ))
-    
   })
   
   output$top_teams <- renderTable(
     
-    team_round[which(team_round$Season == input$season & team_round$Round == "Semifinals"),1]
+    unique(team_round[which(team_round$Season == input$season & team_round$Round == "Semifinals"),1])
   )#top teams by season
   
   output$Winner <- renderTable(
-    country_final[which(country_final$Season == input$season & country_final$Round == "Final"),1]
+    country_final[which(country_final$Season == input$season & country_final$Round == "Final"),1:2]
+  )
+  
+  output$summary_club <- renderTable(
+    club.statistics[which(club.statistics$Club %in% input$club),]
   )
   
   output$league_table <- renderTable(
@@ -64,7 +67,10 @@ server <- function(input, output) {
     league_statistics[which(league_statistics$country %in% input$country & league_statistics$`number of clubs` > input$club_number[1] & league_statistics$`number of clubs` < input$club_number[2])  ,]
   )#statistics group by country
   
-  output$bar_chart_by_learegue <- renderPlot(
+  
+  
+  
+  output$bar_chart_by_league <- renderPlot(
     ggplot(number_trophies_league,aes(Country,`Trophies won`))+geom_bar(stat = "identity",fill = "steelblue")+geom_text(aes(label=`Trophies won`),vjust=-0.2)
   )
 
@@ -166,41 +172,126 @@ server <- function(input, output) {
     Champions_League_Data_1955_2015 %>%
       filter(Champions_League_Data_1955_2015$Season %in% input$Seasons)
   })
+  
+  
+  
+  
   projection_graph <- reactive({
     graph_from_data_frame(projection_data()[, c("Team 1", "Team 2")],
                                           directed=FALSE)
   })
+  
+  projection_graph_1 <- reactive({
+    induced.subgraph(projection_graph(), V(projection_graph())[degree >= input$min_games])
+  })
+  
   output$projection <- renderPlot(
-    plot(projection_graph(), vertex.label.family = "sans", vertex.label.color	= "black", main = "Team projection network of selected seasons")
+    plot(projection_graph(),main = "Team projection network of selected seasons")
   )
+  
+  countries_selected <- reactive({
+    league_statistics[which(league_statistics$`total number of games` >= input$min_games.c),1]
+  })
+  
   projection_data.c <- reactive({
     Champions_League_Data_1955_2015 %>%
-      filter(Champions_League_Data_1955_2015$Season %in% input$Seasons.c)
+      filter(Champions_League_Data_1955_2015$Season %in% input$Seasons.c & Champions_League_Data_1955_2015$`Country Team 1`
+             %in% countries_selected())
   })
   
   projection_graph.c <- reactive({
     graph_from_data_frame(projection_data.c()[,c("Country Team 1","Country Team 2")],
                                         directed =FALSE)
   })
+  
   output$projection.c <- renderPlot(
-    plot(projection_graph.c(),main = "Country projection network of selected seasons")
+    plot(projection_graph.c(),main = "Country projection network of selected seasons",edge.curved=0,vertex.label.family = "sans", vertex.label.color	= "black")
   )
+  
+  output$similarity.1 <- renderText(
+    similarity(g.matches,v = c(input$club1,input$club2),method = "jaccard")[1,2]
+  )
+  
+  observe({
+    if(!is.null(input$club1))
+      updateSelectInput(session,"club3",
+                        choices = input$club1,
+                        selected = isolate(input$club3))
+  })
+  
+  output$similarity.2 <- renderText(
+    similarity(g.matches,v = c(input$club1,input$club4),method = "jaccard")[1,2]
+  )
+  
+   output$name_club1 <- renderText({
+     
+       paste(sep = "","You have chosen: ",input$club1,". According to the Jaccard distance measurement,",
+             ifelse(
+               similarity(g.matches,v = c(input$club1,input$club2),method = "jaccard")[1,2] > similarity(g.matches,v = c(input$club1,input$club4),method = "jaccard")[1,2],
+               ' the first match is more likely to happen.',ifelse(
+                 similarity(g.matches,v = c(input$club1,input$club2),method = "jaccard")[1,2] == similarity(g.matches,v = c(input$club1,input$club4),method = "jaccard")[1,2],
+                 ' these two matches are equally to happen',ifelse(
+                   similarity(g.matches,v = c(input$club1,input$club2),method = "jaccard")[1,2] < similarity(g.matches,v = c(input$club1,input$club4),method = "jaccard")[1,2],
+                   ' the second match is more likely to happen'
+                 )
+               )
+             )
+           )
+   }) 
+   
+   input2 <- reactive(
+     pull(dplyr::filter(list.clubs, `Team 1` != input1 ), `Team 1`)
+   )
+   
+   score <- reactive(
+     for(i in 1:length(input2())){
+       output <- round(similarity(g.matches, v=c(input1, input2[i]))[1,2], 2)
+       score <- c(score, output)
+     }
+   )
+   
+   output$outputtable <- renderTable(
+     cbind(input2(), data.table(score())) %>%
+       select(Club = input2, Score = score())
+   )
+  #  output$summary <- renderText ({ 
+  #    isolate({ paste(sep = "", "Based on population means of ", input$mu_1, " and ", input$mu_2, ", populaton standard deviations of ", input$sigma_1, " and ", 
+  #    input$sigma_2, ", sample sizes of ", input$N_1, " and ", input$N_2, ", and alpha of ", input$alpha, ", 
+  #                 the estimated power of the", ifelse(input$tail=='two.sided', 'two side test',ifelse(input$tail=='greater', 'One-tailed Test, greater','One-tailed Test, less')), 
+  #    "independent samples t-test is ", round(Power, digits = 2), ", with a range of [", round(minrange, digits = 2), ", ", round(maxrange, digits = 2), "].") }) })
+  # # observe({
+  #   if(similarity.1 > similarity.2)
+  #     
+  # })
+  
   
   output$significance <- renderTable(
     stargazer(lm(
       formula = average_score~degree,
-      data = rg_table,type="text") 
+      data = rg_table), type = "text"
     )
   )
   
   output$Regression_results <- renderPlot(
     rg_table %>% 
-      ggplot(aes(x=degree,y=average_score),main = "Linear model of average score and evcent centrality")+
+      ggplot(aes(x=degree,y=average_score))+
       geom_point(alpha = 0.25)+geom_smooth(method ="lm",
                                            se = FALSE)
   )
   
+  output$Regression_results.1 <- renderPlot(
+    rg_table %>%
+      ggplot(aes(x=`number of games`,y=average_score))+
+      geom_point(alpha = 0.25)+geom_smooth(method = "lm",
+                                           se = FALSE)
+  )
   
+  output$significance.1 <- renderTable(
+    stargazer(lm(
+      formula = average_score~`number of games`,
+      data = rg_table
+    ),type = "text")
+  )
     #plot(graph_from_data_frame(projection_data[, c("Team 1", "Team 2")],directed=FALSE)
          #),
          # , edge.arrow.size=.2, edge.curved=0, vertex.size = V(graph_from_data_frame(projection_data[, c("Team 1", "Team 2")],
