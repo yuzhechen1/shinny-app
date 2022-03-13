@@ -13,6 +13,9 @@ ui <- fluidPage(
              the Champions League!"), style = "font-size: 20px;"),
                navbarMenu(title = "Descriptive Analytics",
                         tabPanel(title = "Data retrievals",
+                                 p("In the whole data set with 66 unique seasons, 
+                                   5508 matches, played by 360 unique clubs which belong to
+                                   45 unique countries, are included."),
                                  dataTableOutput("raw_data"),
                                  sidebarLayout(
                                    sidebarPanel(
@@ -21,7 +24,7 @@ ui <- fluidPage(
                                                  choices = all_seasons$Season)
                                    ),
                                    mainPanel(
-                                     p("In this season, teams in the final round are as below:"),
+                                     p("In this season, teams in the final round and winners are as below:"),
                                      tableOutput("top_teams"),
                                      tableOutput("Winner"),
                                    )
@@ -29,7 +32,23 @@ ui <- fluidPage(
                                  
                         ),
                         tabPanel(title = "Teams summary",
-                                 tableOutput("summary_team"), #descriptive analysis group by team
+                                 p("Know about the performance of clubs that you're interested in:"),
+                                 # sidebarLayout(
+                                   # sidebarPanel(
+                                   #   # selectInput(
+                                   #   #   inputId = "club",
+                                   #   #   label = "Choose a club",
+                                   #   #   choices = all_teams$`Team 1`,
+                                   #   #   selected = c(all_teams$`Team 1`[1:10]),
+                                   #   #   multiple = TRUE
+                                   #   # ),
+                                   #   
+                                   # ),
+                                   # mainPanel(
+                                   # ),
+                                   dataTableOutput("summary_club"), #descriptive analysis group by league
+                                   
+                                 #),
                         ),
                         tabPanel(title = "League summary",
                                  p("Know about the performance of countries that you're interested in:"),
@@ -51,10 +70,11 @@ ui <- fluidPage(
                                        inputId = "country",
                                        label = "Choose a country",
                                        choices = all_countries$`Country Team 1`,
+                                       selected = c(all_countries$`Country Team 1`[1:10]),
                                        multiple = TRUE
                                      ),
-                                     sliderInput("club_number","Choose the number of clubs:",
-                                                     value = c(0,10),min = 0,max = 35
+                                     sliderInput("club_number","Choose the number of clubs that this country owns:",
+                                                     value = c(0,20),min = 0,max = 35
                                                    ),
                                    ),
                                    mainPanel(
@@ -62,23 +82,29 @@ ui <- fluidPage(
                                    ),
                                    
                                  ),
+                                 p("How many trophies does each country win in all seasons?"),
                                  sidebarLayout(
-                                   sidebarPanel(
-                                     # sliderInput("period","Choose a period:",
-                                     #   value = c(1955,1965),min = 1955,max = 2016
-                                     # ),
+                                   # sidebarPanel(
+                                   #   checkboxGroupInput("opts","Which period are you interested in?"
+                                   #                      ,choices = c("all years","last ten years"))
+                                   #   # radioButtons("opts","Which period are you interested in?"
+                                   #   #              ,choices = c("all years","last ten years")),
+                                   # ),
+                                   
+                                     p("This is the bar chart with number of trophies of each country"),
+                                       plotOutput("bar_chart_by_league"),
+                                     
                                    ),
-                                   mainPanel(
-                                     p("How many trophies does each country win in all seasons?"),
-                                     plotOutput("bar_chart_by_learegue")
-                                   ),
-                                 ),
                         ),
                         ),# Descriptive part
              navbarMenu(title = "Network Analysis",
                         tabPanel(title = "Team data network",
                                  p("Summary of degrees of the team network"),
                                  dataTableOutput("degree_table"),
+                                 p("Attributes of the whole network:"),
+                                 p("number of nodes: 360, number of edges: 5508, 
+                                   mean distance: 2.74, transitivity: 0.39, 
+                                   diameter: 6, average degree: 30.6"),
                                  p("Degree histogram of all teams:"),
                                  plotOutput("Degree_distribution"),
                                  
@@ -86,6 +112,10 @@ ui <- fluidPage(
                         tabPanel(title = "Country data network",
                                  p("Summary of degrees of the country network"),
                                  dataTableOutput("degree_table.c"),
+                                 p("Attributes of the whole network:"),
+                                 p("number of nodes: 45, number of edges: 5508, 
+                                   mean distance: 1.546, transitivity: 0.81, 
+                                   diameter: 3, average degree: 23"),
                                  p("Degree histogram of all countries:"),
                                  plotOutput("Degree_distribution_c")
                                  ),
@@ -97,7 +127,10 @@ ui <- fluidPage(
                                        label = "Choose seasons for projection:",
                                        choices = all_seasons$Season,
                                        multiple = TRUE
-                                     )
+                                     ),
+                                     # sliderInput("min_games","Choose the minimum games played:",
+                                     #             value = c(10),min = 0,max = 35
+                                     # ),
                                    ),
                                    mainPanel(
                                      plotOutput("projection")
@@ -112,7 +145,10 @@ ui <- fluidPage(
                                        label = "Choose seasons for projection:",
                                        choices = all_seasons$Season,
                                        multiple = TRUE
-                                     )
+                                     ),
+                                     # sliderInput("min_games.c","Choose the minimum games played:",
+                                     #             value = c(50),min = 0,max = 200
+                                     # ),
                                    ),
                                    mainPanel(
                                      plotOutput("projection.c")
@@ -123,11 +159,68 @@ ui <- fluidPage(
              navbarMenu(title = "Deep Dive Analytics",
                         tabPanel(title = "Link prediction",
                                  ## need to input team names & minimum threshold & TBD
-                                 plotOutput("predicted_link")
+                                 sidebarLayout(
+                                   sidebarPanel(
+                                     selectInput(
+                                       inputId = "club1",
+                                       label = "Choose a club that you want to predict:",
+                                       choices = all_teams$`Team 1`,
+                                     ),
+                                     selectInput(
+                                       inputId = "club2",
+                                       label = "Choose another club:",
+                                       choices = all_teams$`Team 1`,
+                                     )
+                                   ),
+                                   mainPanel(
+                                     p("The Jaccard Index of these two teams are:"),
+                                     textOutput("similarity.1")
+                                   )
+                                 ),
+                                 sidebarLayout(
+                                   sidebarPanel(
+                                     selectInput(
+                                       inputId = "club3",
+                                       label = "Choose a club that you want to predict:",
+                                       choices = all_teams$`Team 1`,
+                                     ),
+                                     selectInput(
+                                       inputId = "club4",
+                                       label = "Choose another club:",
+                                       choices = all_teams$`Team 1`,
+                                     )
+                                   ),
+                                   mainPanel(
+                                     p("The Jaccard Index of these two teams are:"),
+                                     textOutput("similarity.2"),
+                                     p(" "),
+                                     p(" ")
+                                   )
+                                 ),
+                                 textOutput("name_club1"),
+                                 # sidebarLayout(
+                                 #   sidebarPanel(
+                                 #     selectInput(
+                                 #       inputId = "input1",
+                                 #       label = "Choose a club that you want to compare:",
+                                 #       choices = all_teams$`Team 1`,
+                                 #     ),
+                                 #   ),
+                                 #   mainPanel(
+                                 #     p("Top 20 likely linked clubs:"),
+                                 #     textOutput("outputtable")
+                                 #   )
+                                 # ),
                                  ),
                         tabPanel(title = "Inference",
+                                 p("The following graph shows the linear correlation of average score and degree centrality of countries"),
                                  plotOutput("Regression_results"),
-                                 tableOutput("significance")
+                                 p("Statistical significance of this model:"),
+                                 tableOutput("significance"),
+                                 p("The following graph shows the linear correlation of average score and number of games played of countries"),
+                                 plotOutput("Regression_results.1"),
+                                 p("Statistical significance of this model:"),
+                                 tableOutput("significance.1")
                                  ## need to input variable names(such as centrality and average goals)
                                  
                           
